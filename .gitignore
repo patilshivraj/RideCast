@@ -30,5 +30,10 @@ generated/
 # Kotlin/Gradle generated
 .kotlin/
 
-# Cursor
-.cursor/
+# Cursor — commit shared rules; ignore local IDE/agent cache and logs
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+.cursor/debug/
+.cursor/agent-cache/
+.cursor/**/*.log

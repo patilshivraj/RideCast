@@ -2,6 +2,8 @@
 
 A production-quality Android app that shows motorcyclists the weather they will ride through — not just at the start.
 
+> **Contributors & AI agents:** See [AGENTS.md](AGENTS.md) for project conventions, repo layout, and links to detailed docs in `docs/`.
+
 ## Features
 
 - 📍 **Route Planning** — Google Places autocomplete for origin and destination
@@ -47,16 +49,9 @@ WEATHER_API_KEY=your_weather_key
 
 ## Architecture
 
-```
-app/
-├── core/         # Result<T>, NetworkMonitor, FlowExtensions
-├── domain/       # Models, Repository interfaces, Use cases, Insight engine
-├── data/         # Retrofit services, Room, DataStore, Repository implementations
-├── di/           # Hilt modules
-└── presentation/ # MVVM screens (Compose + ViewModels)
-```
-
 Clean Architecture · MVVM · Repository Pattern · Hilt DI · Kotlin Coroutines + Flow
+
+See [docs/architecture.md](docs/architecture.md) for layers, navigation, data flow, and external APIs.
 
 ## Tech Stack
 

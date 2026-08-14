@@ -9,7 +9,7 @@
 sdk.dir=/Users/YOUR_USER/Library/Android/sdk
 
 # ── Google Maps Platform ──────────────────────────────────────
-# Enable: Maps SDK for Android, Places API, Routes API
+# Enable: Maps SDK for Android, Places API (New), Routes API
 # https://console.cloud.google.com/
 MAPS_API_KEY=your_google_maps_api_key_here
 
