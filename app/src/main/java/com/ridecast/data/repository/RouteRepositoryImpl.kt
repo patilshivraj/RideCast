@@ -23,9 +23,14 @@ class RouteRepositoryImpl @Inject constructor(
 
     override suspend fun calculateRoute(input: TripInput): Result<Route> {
         return try {
+            val intermediates = input.intermediateStops.map { stop ->
+                RouteWaypoint(RouteLocation(RoutesLatLng(stop.lat, stop.lng)))
+            }
             val request = ComputeRoutesRequest(
                 origin = RouteWaypoint(RouteLocation(RoutesLatLng(input.originLat, input.originLng))),
                 destination = RouteWaypoint(RouteLocation(RoutesLatLng(input.destinationLat, input.destinationLng))),
+                intermediates = intermediates,
+                travelMode = input.travelMode.apiValue,
             )
             val response = withContext(Dispatchers.IO) {
                 routesApiService.computeRoutes(

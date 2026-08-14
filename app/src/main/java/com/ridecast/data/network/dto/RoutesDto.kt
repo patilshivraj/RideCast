@@ -5,6 +5,7 @@ package com.ridecast.data.network.dto
 data class ComputeRoutesRequest(
     val origin: RouteWaypoint,
     val destination: RouteWaypoint,
+    val intermediates: List<RouteWaypoint> = emptyList(),
     val travelMode: String = "DRIVE",
     val routingPreference: String = "TRAFFIC_AWARE",
 )

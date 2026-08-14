@@ -9,19 +9,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import com.ridecast.presentation.theme.RideCastType
 
 /**
  * Shared top app bar used across all RideCast screens.
- *
- * Wraps Material 3 [TopAppBar] with consistent styling — surface colour, bold title,
- * and support for scroll-aware behaviour (e.g. collapsing on scroll in Milestone 6).
- *
- * @param title          Screen title text.
- * @param modifier       Applied to the bar container.
- * @param navigationIcon Optional back/menu icon slot.
- * @param actions        Optional icon buttons on the trailing end.
- * @param scrollBehavior Optional [TopAppBarScrollBehavior] for collapsing behaviour.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,18 +26,19 @@ fun RideCastTopBar(
     TopAppBar(
         title = {
             Text(
-                text       = title,
-                style      = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
+                text = title,
+                style = RideCastType.screenTitle,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         },
         navigationIcon = navigationIcon,
-        actions        = actions,
+        actions = actions,
         scrollBehavior = scrollBehavior,
-        modifier       = modifier,
-        colors         = TopAppBarDefaults.topAppBarColors(
-            containerColor         = MaterialTheme.colorScheme.surface,
-            titleContentColor      = MaterialTheme.colorScheme.onSurface,
+        modifier = modifier,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
     )

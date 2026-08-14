@@ -96,6 +96,7 @@ fun RideCastNavGraph(
             TripPlannerScreen(
                 routeViewModel = routeViewModel,
                 weatherViewModel = weatherViewModel,
+                mapType = settingsState.mapType,
             )
         }
 
@@ -104,7 +105,11 @@ fun RideCastNavGraph(
         }
 
         composable(Screen.Map.route) {
-            MapScreen(routeViewModel = routeViewModel, weatherViewModel = weatherViewModel)
+            MapScreen(
+                routeViewModel = routeViewModel,
+                weatherViewModel = weatherViewModel,
+                settingsViewModel = settingsViewModel,
+            )
         }
 
         composable(Screen.Summary.route) {

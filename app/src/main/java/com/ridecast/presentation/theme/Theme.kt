@@ -11,44 +11,60 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// ─── Static fallback colour schemes (pre-Android 12) ──────────────────────────
-
 private val RideCastLightColorScheme = lightColorScheme(
-    primary          = RideCastBlue,
-    onPrimary        = Color.White,
-    primaryContainer = RideCastBlueLight,
-    onPrimaryContainer = RideCastBlueDark,
-    secondary        = RideCastOrange,
-    onSecondary      = Color.White,
-    secondaryContainer = RideCastOrangeLight,
-    onSecondaryContainer = RideCastOrangeDark,
+    primary = RideCastOlive,
+    onPrimary = Color.White,
+    primaryContainer = RideCastOliveLight.copy(alpha = 0.25f),
+    onPrimaryContainer = RideCastOliveDark,
+    secondary = RideCastGold,
+    onSecondary = RideCastCharcoal,
+    secondaryContainer = RideCastGoldLight.copy(alpha = 0.35f),
+    onSecondaryContainer = RideCastGoldDark,
+    background = RideCastCream,
+    onBackground = RideCastCharcoal,
+    surface = RideCastSurfaceElevated,
+    onSurface = RideCastCharcoal,
+    onSurfaceVariant = RideCastCharcoalMuted,
+    surfaceVariant = RideCastCream,
+    outline = RideCastCharcoalMuted.copy(alpha = 0.35f),
+    outlineVariant = RideCastCharcoalMuted.copy(alpha = 0.2f),
+    error = WeatherExtreme,
+    errorContainer = WeatherExtreme.copy(alpha = 0.12f),
+    onErrorContainer = WeatherExtreme,
 )
 
 private val RideCastDarkColorScheme = darkColorScheme(
-    primary          = RideCastBlueLight,
-    onPrimary        = RideCastBlueDark,
-    primaryContainer = RideCastBlue,
-    onPrimaryContainer = Color.White,
-    secondary        = RideCastOrangeLight,
-    onSecondary      = RideCastOrangeDark,
-    secondaryContainer = RideCastOrange,
-    onSecondaryContainer = Color.White,
+    primary = RideCastOliveLight,
+    onPrimary = RideCastCharcoal,
+    primaryContainer = RideCastOliveDark,
+    onPrimaryContainer = RideCastOliveLight,
+    secondary = RideCastGoldLight,
+    onSecondary = RideCastCharcoal,
+    secondaryContainer = RideCastGoldDark,
+    onSecondaryContainer = RideCastGoldLight,
+    background = Color(0xFF1C1B18),
+    onBackground = Color(0xFFE8E4DC),
+    surface = Color(0xFF262420),
+    onSurface = Color(0xFFE8E4DC),
+    onSurfaceVariant = Color(0xFFA8A49C),
+    surfaceVariant = Color(0xFF2E2C28),
+    outline = Color(0xFF5C5A56),
+    outlineVariant = Color(0xFF3D3B38),
+    error = Color(0xFFE07A6A),
+    errorContainer = WeatherExtreme.copy(alpha = 0.2f),
+    onErrorContainer = Color(0xFFF0B0A8),
 )
 
 /**
  * Root theme for all RideCast composables.
  *
- * On Android 12+ (API 31/S), Material You dynamic colour is applied using the device
- * wallpaper as the seed. On older devices, the static brand palette defined above is used.
- *
- * @param darkTheme     Whether to apply the dark colour scheme. Defaults to system setting.
- * @param dynamicColor  Whether to enable Material You wallpaper-based colour extraction
- *                      (Android 12+ only). Can be toggled from the Settings screen.
+ * Brand palette is applied by default. Material You dynamic colour can be enabled
+ * via [dynamicColor] (Android 12+ only).
  */
 @Composable
 fun RideCastTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -57,12 +73,13 @@ fun RideCastTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> RideCastDarkColorScheme
-        else      -> RideCastLightColorScheme
+        else -> RideCastLightColorScheme
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography  = RideCastTypography,
-        content     = content,
+        typography = RideCastTypography,
+        shapes = RideCastShapes,
+        content = content,
     )
 }

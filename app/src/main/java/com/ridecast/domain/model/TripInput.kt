@@ -15,6 +15,9 @@ data class TripInput(
     val destinationName: String,
     val destinationLat: Double,
     val destinationLng: Double,
+    /** Ordered stops between origin and destination (max 5 in the Plan UI). */
+    val intermediateStops: List<RouteStop> = emptyList(),
     /** The exact moment the rider plans to leave. Timezone-aware for accurate ETA computation. */
     val departureTime: ZonedDateTime,
+    val travelMode: TravelMode = TravelMode.TWO_WHEELER,
 )

@@ -11,6 +11,6 @@
         <!-- Transparent system bars — edge-to-edge is managed by enableEdgeToEdge() -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 </resources>

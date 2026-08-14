@@ -5,18 +5,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -32,14 +40,6 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Single-Activity host for the entire RideCast app.
- *
- * Responsibilities:
- * - Enable edge-to-edge rendering so Compose controls system bar insets.
- * - Apply [RideCastTheme] (Material You) to the entire composition.
- * - Host the bottom navigation bar and the [RideCastNavGraph].
- *
- * Navigation state is owned here so it survives configuration changes via the
- * NavController backed by the Activity's ViewModelStore.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -52,8 +52,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
             val darkTheme = when (settings.darkMode) {
-                DarkMode.LIGHT  -> false
-                DarkMode.DARK   -> true
+                DarkMode.LIGHT -> false
+                DarkMode.DARK -> true
                 DarkMode.SYSTEM -> isSystemInDarkTheme()
             }
             RideCastTheme(darkTheme = darkTheme) {
@@ -67,22 +67,36 @@ class MainActivity : ComponentActivity() {
 private fun RideCastApp() {
     val navController: NavHostController = rememberNavController()
     val tabs = remember { Screen.bottomNavTabs }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val isImmersiveTab = navBackStackEntry?.destination?.route in immersiveTabRoutes
 
     Scaffold(
-        modifier  = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             RideCastBottomBar(
                 navController = navController,
-                tabs          = tabs,
+                tabs = tabs,
             )
         },
     ) { innerPadding ->
         RideCastNavGraph(
             navController = navController,
-            modifier      = Modifier.padding(innerPadding),
+            modifier = if (isImmersiveTab) {
+                Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+            } else {
+                Modifier.padding(innerPadding)
+            },
         )
     }
 }
+
+// Route strings only — do not reference Screen.* here; MainActivityKt <clinit> would
+// initialize before Screen data objects and leave nulls in Screen.bottomNavTabs.
+private val immersiveTabRoutes = setOf(
+    "trip_planner",
+    "map",
+)
 
 @Composable
 private fun RideCastBottomBar(
@@ -92,33 +106,63 @@ private fun RideCastBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+        windowInsets = NavigationBarDefaults.windowInsets,
+    ) {
         tabs.forEach { screen ->
             val isSelected = currentDestination
                 ?.hierarchy
                 ?.any { it.route == screen.route } == true
 
+            val iconScale by animateFloatAsState(
+                targetValue = if (isSelected) 1.1f else 1f,
+                animationSpec = tween(200),
+                label = "nav_icon_scale",
+            )
+            val labelColor by animateColorAsState(
+                targetValue = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                animationSpec = tween(200),
+                label = "nav_label_color",
+            )
+
             NavigationBarItem(
                 selected = isSelected,
-                onClick  = {
+                onClick = {
                     navController.navigate(screen.route) {
-                        // Pop up to the start destination to avoid building a large back stack.
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
-                        // Avoid multiple copies of the same destination on re-select.
                         launchSingleTop = true
-                        // Restore state when reselecting a previously visited tab.
-                        restoreState    = true
+                        restoreState = true
                     }
                 },
-                icon  = {
+                icon = {
                     Icon(
-                        imageVector        = if (isSelected) screen.selectedIcon else screen.icon,
+                        imageVector = if (isSelected) screen.selectedIcon else screen.icon,
                         contentDescription = screen.label,
+                        modifier = Modifier.scale(iconScale),
                     )
                 },
-                label = { Text(text = screen.label) },
+                label = {
+                    Text(
+                        text = screen.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = labelColor,
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                ),
             )
         }
     }

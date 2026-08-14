@@ -14,6 +14,7 @@ Canonical entry point for AI agents and human contributors working on **RideCast
 |----------|----------|
 | [README.md](README.md) | User-facing overview, quick setup, feature list |
 | [docs/architecture.md](docs/architecture.md) | Layers, navigation, ViewModel scoping, data flow |
+| [docs/ui-design-system.md](docs/ui-design-system.md) | Colors, typography, spacing, shared Compose components |
 | [docs/development.md](docs/development.md) | Build/run, API keys, emulator setup, troubleshooting |
 | [docs/decisions/](docs/decisions/) | Architecture decision records (ADRs) |
 

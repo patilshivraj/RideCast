@@ -4,19 +4,21 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ridecast.presentation.components.RideMetric
+import com.ridecast.presentation.theme.RideCastSpacing
+import com.ridecast.presentation.theme.RideCastType
+import com.ridecast.presentation.theme.toSemanticColor
 import com.ridecast.presentation.weather.WeatherCondition
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
@@ -38,14 +44,14 @@ fun AnimatedTimelineCard(item: TimelineItem, modifier: Modifier = Modifier) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(item.index) {
-        delay(item.index * 80L)
+        delay(item.index * 60L)
         visible = true
     }
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(animationSpec = tween(300)) +
-                slideInVertically(animationSpec = tween(300)) { it / 2 },
+        enter = fadeIn(animationSpec = tween(250)) +
+            slideInVertically(animationSpec = tween(250)) { it / 3 },
     ) {
         WeatherTimelineCard(item = item, modifier = modifier)
     }
@@ -56,73 +62,137 @@ fun WeatherTimelineCard(
     item: TimelineItem,
     modifier: Modifier = Modifier,
 ) {
-    val containerColor = when (item.condition) {
-        WeatherCondition.SUNNY, WeatherCondition.PARTLY_CLOUDY ->
-            MaterialTheme.colorScheme.primaryContainer
-        WeatherCondition.RAIN, WeatherCondition.HEAVY_RAIN ->
-            MaterialTheme.colorScheme.secondaryContainer
-        WeatherCondition.STORM ->
-            MaterialTheme.colorScheme.errorContainer
-        WeatherCondition.CLOUDY, WeatherCondition.FOG ->
-            MaterialTheme.colorScheme.surfaceVariant
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
+    val accentColor = item.condition.toSemanticColor()
+    val isNoteworthy = item.condition in listOf(
+        WeatherCondition.RAIN,
+        WeatherCondition.HEAVY_RAIN,
+        WeatherCondition.STORM,
+    ) || item.windSpeedKph > 40 || item.rainProbabilityPercent > 50
 
-    Card(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = if (isNoteworthy) 2.dp else 1.dp,
+        shadowElevation = 0.dp,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .background(accentColor.copy(alpha = 0.55f)),
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(RideCastSpacing.md),
+            ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = item.timeFormatted,
+                            style = RideCastType.metricSecondary,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (!item.isOrigin && !item.isDestination) {
+                            Spacer(Modifier.width(RideCastSpacing.sm))
+                            Text(
+                                text = "${item.distanceKm} km",
+                                style = RideCastType.caption,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    Text(
+                        text = item.locationLabel,
+                        style = RideCastType.cardTitle,
+                        fontWeight = if (item.isOrigin || item.isDestination) FontWeight.SemiBold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Text(text = item.conditionEmoji, fontSize = 28.sp)
+            }
+
+            if (isNoteworthy) {
+                Spacer(Modifier.height(RideCastSpacing.sm))
                 Text(
-                    text = item.timeFormatted,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(56.dp),
-                )
-                Text(
-                    text = item.locationLabel,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (item.isOrigin || item.isDestination) FontWeight.Bold else FontWeight.Normal,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(text = item.conditionEmoji, fontSize = 24.sp)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = item.conditionText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = buildAlertText(item),
+                    style = RideCastType.caption,
+                    color = accentColor,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            accentColor.copy(alpha = 0.1f),
+                            MaterialTheme.shapes.small,
+                        )
+                        .padding(horizontal = RideCastSpacing.sm, vertical = RideCastSpacing.xs),
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(RideCastSpacing.sm))
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = accentColor.copy(alpha = 0.2f),
+            )
+            Spacer(Modifier.height(RideCastSpacing.sm))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                WeatherStat(label = "Temp", value = "${item.temperatureCelsius.roundToInt()}°C")
-                WeatherStat(label = "Feels", value = "${item.feelsLikeCelsius.roundToInt()}°C")
-                WeatherStat(label = "Rain", value = "${item.rainProbabilityPercent}%")
-                WeatherStat(label = "Wind", value = "${item.windSpeedKph.roundToInt()} km/h")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                RideMetric(
+                    label = "Temp",
+                    value = "${item.temperatureCelsius.roundToInt()}°",
+                    emphasized = true,
+                )
+                RideMetric(
+                    label = "Feels",
+                    value = "${item.feelsLikeCelsius.roundToInt()}°",
+                )
+                RideMetric(
+                    label = "Rain",
+                    value = "${item.rainProbabilityPercent}%",
+                    emphasized = item.rainProbabilityPercent > 50,
+                )
+                RideMetric(
+                    label = "Wind",
+                    value = "${item.windSpeedKph.roundToInt()}",
+                    emphasized = item.windSpeedKph > 40,
+                )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                WeatherStat(label = "Visibility", value = "${item.visibilityKm}km", modifier = Modifier.weight(1f))
-                WeatherStat(label = "Precip", value = "${item.rainAmountMm}mm", modifier = Modifier.weight(1f))
-                WeatherStat(label = "Humidity", value = "${item.humidityPercent}%", modifier = Modifier.weight(1f))
+            if (!item.isOrigin && !item.isDestination) {
+                Spacer(Modifier.height(RideCastSpacing.xs))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = "Vis ${item.visibilityKm}km · ${item.humidityPercent}% humidity",
+                        style = RideCastType.caption,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             }
         }
     }
 }
 
-@Composable
-private fun WeatherStat(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
+private fun buildAlertText(item: TimelineItem): String = when {
+    item.condition == WeatherCondition.STORM -> "Storm expected — consider delaying"
+    item.condition == WeatherCondition.HEAVY_RAIN -> "Heavy rain likely"
+    item.rainProbabilityPercent > 50 -> "Rain likely (${item.rainProbabilityPercent}%)"
+    item.windSpeedKph > 40 -> "Strong wind (${item.windSpeedKph.roundToInt()} km/h)"
+    else -> item.conditionText
 }

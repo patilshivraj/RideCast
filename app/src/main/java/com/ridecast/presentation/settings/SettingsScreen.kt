@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,16 +20,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ridecast.BuildConfig
 import com.ridecast.domain.model.DarkMode
 import com.ridecast.domain.model.MapDisplayType
 import com.ridecast.domain.model.SamplingConfig
 import com.ridecast.domain.model.TemperatureUnit
 import com.ridecast.domain.model.WindUnit
 import com.ridecast.presentation.components.RideCastTopBar
+import com.ridecast.presentation.components.SectionHeader
+import com.ridecast.presentation.theme.RideCastSpacing
 
 @Composable
 fun SettingsScreen(
@@ -41,20 +41,22 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = { RideCastTopBar("Settings") },
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier,
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(RideCastSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(RideCastSpacing.sm),
         ) {
-            item { SettingsSectionHeader("Route") }
+            item {
+                SectionHeader(title = "Route", subtitle = "Weather sampling along your route")
+            }
             item {
                 SegmentedSettingRow(
-                    title = "Sampling Distance",
-                    subtitle = "Weather point every N km",
+                    title = "Sampling distance",
                     options = SamplingConfig.SUPPORTED_INTERVALS.map { "$it km" },
                     selectedIndex = SamplingConfig.SUPPORTED_INTERVALS
                         .indexOf(settings.samplingIntervalKm)
@@ -65,7 +67,9 @@ fun SettingsScreen(
                 )
             }
 
-            item { SettingsSectionHeader("Units") }
+            item { Spacer(Modifier.height(RideCastSpacing.sm)) }
+
+            item { SectionHeader(title = "Units") }
             item {
                 SegmentedSettingRow(
                     title = "Temperature",
@@ -76,55 +80,56 @@ fun SettingsScreen(
             }
             item {
                 SegmentedSettingRow(
-                    title = "Wind Speed",
+                    title = "Wind speed",
                     options = WindUnit.entries.map { it.label },
                     selectedIndex = WindUnit.entries.indexOf(settings.windUnit),
                     onSelected = { viewModel.setWindUnit(WindUnit.entries[it]) },
                 )
             }
 
-            item { SettingsSectionHeader("Appearance") }
+            item { Spacer(Modifier.height(RideCastSpacing.sm)) }
+
+            item { SectionHeader(title = "Appearance") }
             item {
                 SegmentedSettingRow(
-                    title = "Dark Mode",
+                    title = "Dark mode",
                     options = DarkMode.entries.map { it.label },
                     selectedIndex = DarkMode.entries.indexOf(settings.darkMode),
                     onSelected = { viewModel.setDarkMode(DarkMode.entries[it]) },
                 )
             }
 
-            item { SettingsSectionHeader("Map") }
+            item { Spacer(Modifier.height(RideCastSpacing.sm)) }
+
+            item { SectionHeader(title = "Map") }
             item {
                 SegmentedSettingRow(
-                    title = "Map Type",
+                    title = "Map type",
                     options = MapDisplayType.entries.map { it.label },
                     selectedIndex = MapDisplayType.entries.indexOf(settings.mapType),
                     onSelected = { viewModel.setMapType(MapDisplayType.entries[it]) },
                 )
             }
 
-            item { SettingsSectionHeader("About") }
+            item { Spacer(Modifier.height(RideCastSpacing.sm)) }
+
+            item { SectionHeader(title = "About") }
             item {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 ListItem(
                     headlineContent = { Text("RideCast") },
                     supportingContent = { Text("Motorcycle weather route planner") },
                     trailingContent = {
-                        Text("v1.0.0", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "v${BuildConfig.VERSION_NAME}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     },
                 )
             }
         }
     }
-}
-
-@Composable
-private fun SettingsSectionHeader(title: String) {
-    Text(
-        text = title.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-    )
 }
 
 @Composable
@@ -135,33 +140,31 @@ private fun SegmentedSettingRow(
     onSelected: (Int) -> Unit,
     subtitle: String? = null,
 ) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (subtitle != null) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        }
+        Spacer(Modifier.height(RideCastSpacing.sm))
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, label ->
+                SegmentedButton(
+                    selected = index == selectedIndex,
+                    onClick = { onSelected(index) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = options.size,
+                    ),
+                    label = { Text(label, maxLines = 1) },
                 )
-            }
-            Spacer(Modifier.height(12.dp))
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                options.forEachIndexed { index, label ->
-                    SegmentedButton(
-                        selected = index == selectedIndex,
-                        onClick = { onSelected(index) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = options.size,
-                        ),
-                        label = { Text(label, maxLines = 1) },
-                    )
-                }
             }
         }
     }

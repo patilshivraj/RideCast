@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.ridecast.domain.repository.FavoritePlacesRepository
 import com.ridecast.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -33,4 +34,10 @@ abstract class SettingsBindingModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFavoritePlacesRepository(
+        impl: DataStoreFavoritePlacesRepository,
+    ): FavoritePlacesRepository
 }

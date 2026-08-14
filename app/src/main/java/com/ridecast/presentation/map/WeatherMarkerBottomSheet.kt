@@ -1,5 +1,6 @@
 package com.ridecast.presentation.map
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,9 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ridecast.domain.model.WeatherPoint
+import com.ridecast.presentation.components.RideMetric
+import com.ridecast.presentation.theme.RideCastSpacing
+import com.ridecast.presentation.theme.RideCastType
+import com.ridecast.presentation.theme.toSemanticColor
 import com.ridecast.presentation.weather.toEmoji
 import com.ridecast.presentation.weather.toWeatherCondition
 import java.time.format.DateTimeFormatter
@@ -33,80 +37,112 @@ fun WeatherMarkerBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val condition = weatherPoint.weather.conditionCode.toWeatherCondition()
+    val accentColor = condition.toSemanticColor()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(horizontal = RideCastSpacing.lg)
+                .padding(bottom = RideCastSpacing.xl),
         ) {
-            // Header: time + location
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = weatherPoint.routePoint.eta.format(
-                            DateTimeFormatter.ofPattern("HH:mm, EEE d MMM")
+                            DateTimeFormatter.ofPattern("HH:mm, EEE d MMM"),
                         ),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        style = RideCastType.screenTitle,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = if (distanceKm == 0) "Departure point" else "$distanceKm km from start",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = RideCastType.caption,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(text = condition.toEmoji(), fontSize = 40.sp)
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(RideCastSpacing.xs))
             Text(
                 text = weatherPoint.weather.conditionText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                color = accentColor,
+                fontWeight = FontWeight.Medium,
             )
 
-            Spacer(Modifier.height(20.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(RideCastSpacing.lg))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(Modifier.height(RideCastSpacing.md))
 
-            // Stats grid — 2 columns × 4 rows
-            val stats = listOf(
-                "🌡️ Temperature" to "${weatherPoint.weather.temperatureCelsius.roundToInt()}°C",
-                "🤔 Feels Like"  to "${weatherPoint.weather.feelsLikeCelsius.roundToInt()}°C",
-                "💧 Rain Chance" to "${weatherPoint.weather.rainProbabilityPercent}%",
-                "🌧️ Precip"      to "${weatherPoint.weather.rainAmountMm} mm",
-                "💨 Wind"        to "${weatherPoint.weather.windSpeedKph.roundToInt()} km/h",
-                "💦 Humidity"    to "${weatherPoint.weather.humidityPercent}%",
-                "👁️ Visibility"  to "${weatherPoint.weather.visibilityKm} km",
-                "☀️ UV Index"    to "${weatherPoint.weather.uvIndex.roundToInt()}",
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                RideMetric(
+                    label = "Temperature",
+                    value = "${weatherPoint.weather.temperatureCelsius.roundToInt()}°C",
+                    emphasized = true,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+                RideMetric(
+                    label = "Feels like",
+                    value = "${weatherPoint.weather.feelsLikeCelsius.roundToInt()}°C",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+                RideMetric(
+                    label = "Rain chance",
+                    value = "${weatherPoint.weather.rainProbabilityPercent}%",
+                    emphasized = weatherPoint.weather.rainProbabilityPercent > 50,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+            }
 
-            stats.chunked(2).forEach { pair ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    pair.forEach { (label, value) ->
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(vertical = 8.dp),
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = value,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
-                }
+            Spacer(Modifier.height(RideCastSpacing.md))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                RideMetric(
+                    label = "Wind",
+                    value = "${weatherPoint.weather.windSpeedKph.roundToInt()} km/h",
+                    emphasized = weatherPoint.weather.windSpeedKph > 40,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+                RideMetric(
+                    label = "Humidity",
+                    value = "${weatherPoint.weather.humidityPercent}%",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+                RideMetric(
+                    label = "Visibility",
+                    value = "${weatherPoint.weather.visibilityKm} km",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+            }
+
+            Spacer(Modifier.height(RideCastSpacing.md))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                RideMetric(
+                    label = "Precipitation",
+                    value = "${weatherPoint.weather.rainAmountMm} mm",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+                RideMetric(
+                    label = "UV index",
+                    value = "${weatherPoint.weather.uvIndex.roundToInt()}",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
             }
         }
     }

@@ -6,15 +6,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.ridecast.presentation.theme.RideCastSpacing
 
 @Composable
 fun ShimmerTimelineList(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(
+            horizontal = RideCastSpacing.md,
+            vertical = RideCastSpacing.md,
+        ),
+        verticalArrangement = Arrangement.spacedBy(RideCastSpacing.md),
     ) {
         repeat(5) {
-            ShimmerBox(height = 120.dp, cornerRadius = 16.dp)
+            ShimmerBox(height = 100.dp, cornerRadius = RideCastSpacing.md)
         }
     }
 }

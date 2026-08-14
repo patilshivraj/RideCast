@@ -1,5 +1,6 @@
 package com.ridecast.presentation.summary
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.DirectionsBike
@@ -22,8 +22,8 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.WaterDrop
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,20 +34,36 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ridecast.core.util.Result
 import com.ridecast.domain.model.RideSummaryStats
 import com.ridecast.domain.model.RideWeather
+import com.ridecast.presentation.components.EmptyState
+import com.ridecast.presentation.components.LoadingState
+import com.ridecast.presentation.components.RideCastSurfaceCard
 import com.ridecast.presentation.components.RideCastTopBar
+import com.ridecast.presentation.components.RideMetric
+import com.ridecast.presentation.components.SectionHeader
 import com.ridecast.presentation.route.RouteUiModel
 import com.ridecast.presentation.route.RouteViewModel
+import com.ridecast.presentation.theme.RideCastSpacing
+import com.ridecast.presentation.theme.RideCastType
+import com.ridecast.presentation.theme.RideConditionCaution
+import com.ridecast.presentation.theme.RideConditionGood
+import com.ridecast.presentation.theme.RideConditionPoor
 import com.ridecast.presentation.trip.TripPlannerViewModel
 import com.ridecast.presentation.weather.WeatherViewModel
 import kotlin.math.roundToInt
+
+private enum class RideCondition(val label: String, val color: Color) {
+    GOOD("Good to ride", RideConditionGood),
+    CAUTION("Ride with caution", RideConditionCaution),
+    POOR("Consider delaying", RideConditionPoor),
+}
 
 @Composable
 fun SummaryScreen(
@@ -78,110 +94,47 @@ fun SummaryScreen(
 
     Scaffold(
         topBar = { RideCastTopBar(title = "Ride Summary") },
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier,
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when {
-                weatherState !is Result.Success -> EmptySummaryContent()
-                summaryState is Result.Loading  -> SummaryLoadingContent()
-                summaryState is Result.Error    -> SummaryErrorContent(
-                    message = (summaryState as Result.Error).message,
-                )
-                summaryState is Result.Success  -> {
+                weatherState !is Result.Success -> {
+                    EmptyState(
+                        icon = Icons.Outlined.Speed,
+                        title = "No ride summary yet",
+                        message = "Plan a route and fetch weather to see ride intelligence.",
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+                summaryState is Result.Loading -> {
+                    LoadingState(
+                        message = "Computing your ride summary…",
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+                summaryState is Result.Error -> {
+                    EmptyState(
+                        icon = Icons.Outlined.Speed,
+                        title = "Summary unavailable",
+                        message = (summaryState as Result.Error).message ?: "An unexpected error occurred.",
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+                summaryState is Result.Success -> {
                     val stats = (summaryState as Result.Success<RideSummaryStats>).data
                     val originName = tripState.selectedOrigin?.name ?: "Origin"
                     val destName = tripState.selectedDestination?.name ?: "Destination"
-                    SummaryContent(stats = stats, originName = originName, destinationName = destName)
+                    SummaryContent(
+                        stats = stats,
+                        originName = originName,
+                        destinationName = destName,
+                    )
                 }
             }
         }
     }
 }
-
-// ── State composables ──────────────────────────────────────────────────────────
-
-@Composable
-private fun EmptySummaryContent() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Speed,
-                contentDescription = null,
-                modifier = Modifier.size(72.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "Plan a ride to see the summary",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Enter a route and fetch weather to unlock insights",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryLoadingContent() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            CircularProgressIndicator(modifier = Modifier.size(56.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Computing your ride summary…",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryErrorContent(message: String?) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "⚠️",
-                style = MaterialTheme.typography.displayMedium,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Summary unavailable",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.error,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = message ?: "An unexpected error occurred.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp),
-            )
-        }
-    }
-}
-
-// ── Success content ────────────────────────────────────────────────────────────
 
 @Composable
 private fun SummaryContent(
@@ -189,11 +142,16 @@ private fun SummaryContent(
     originName: String,
     destinationName: String,
 ) {
+    val rideCondition = deriveRideCondition(stats.insights)
+
     LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(RideCastSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(RideCastSpacing.md),
         modifier = Modifier.fillMaxSize(),
     ) {
+        item {
+            RideConditionBanner(condition = rideCondition)
+        }
         item {
             TripOverviewCard(
                 originName = originName,
@@ -203,57 +161,47 @@ private fun SummaryContent(
             )
         }
         item {
-            TemperatureCard(
+            MetricsRow(
                 high = stats.highestTempCelsius,
                 low = stats.lowestTempCelsius,
                 avg = stats.averageTempCelsius,
-            )
-        }
-        item {
-            PrecipitationCard(
                 rainKm = stats.rainExposureKm,
-                rainHours = stats.rainExposureHours,
+                strongWindPoints = stats.strongWindPoints,
             )
         }
         item {
-            WindCard(strongWindPoints = stats.strongWindPoints)
-        }
-        item {
-            InsightsCard(insights = stats.insights)
+            InsightsSection(insights = stats.insights)
         }
     }
 }
 
-// ── Cards ──────────────────────────────────────────────────────────────────────
-
 @Composable
-private fun SummaryCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    content: @Composable () -> Unit,
-) {
-    ElevatedCard(
+private fun RideConditionBanner(condition: RideCondition) {
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = condition.color.copy(alpha = 0.15f),
+        ),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            content()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(RideCastSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(condition.color, MaterialTheme.shapes.small),
+            )
+            Spacer(Modifier.width(RideCastSpacing.sm))
+            Text(
+                text = condition.label,
+                style = RideCastType.metricPrimary,
+                color = condition.color,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }
@@ -265,139 +213,162 @@ private fun TripOverviewCard(
     distanceKm: Double,
     durationFormatted: String,
 ) {
-    SummaryCard(title = "Trip Overview", icon = Icons.Outlined.DirectionsBike) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    RideCastSurfaceCard {
+        SectionHeader(title = "Trip overview")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.DirectionsBike,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(RideCastSpacing.sm))
             Column {
+                Text(text = originName, style = RideCastType.cardTitle)
                 Text(
-                    text = originName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "→  $destinationName",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            StatChip(label = "Distance", value = "${(distanceKm * 10).roundToInt() / 10.0} km")
-            StatChip(label = "Duration", value = durationFormatted)
-        }
-    }
-}
-
-@Composable
-private fun TemperatureCard(high: Double, low: Double, avg: Double) {
-    SummaryCard(title = "Temperature", icon = Icons.Outlined.Thermostat) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            StatChip(label = "High", value = "${high.roundToInt()}°C")
-            StatChip(label = "Avg", value = "${avg.roundToInt()}°C")
-            StatChip(label = "Low", value = "${low.roundToInt()}°C")
-        }
-    }
-}
-
-@Composable
-private fun PrecipitationCard(rainKm: Long, rainHours: Double) {
-    SummaryCard(title = "Rain Exposure", icon = Icons.Outlined.WaterDrop) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            StatChip(label = "Distance in rain", value = "$rainKm km")
-            val hoursInt = rainHours.toInt()
-            val minutesInt = ((rainHours - hoursInt) * 60).roundToInt()
-            val hoursLabel = if (hoursInt > 0) "${hoursInt}h ${minutesInt}m" else "${minutesInt}m"
-            StatChip(label = "Time in rain", value = hoursLabel)
-        }
-    }
-}
-
-@Composable
-private fun WindCard(strongWindPoints: Int) {
-    SummaryCard(title = "Wind", icon = Icons.Outlined.Air) {
-        if (strongWindPoints == 0) {
-            Text(
-                text = "No strong wind sections on this route.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            Text(
-                text = "$strongWindPoints waypoint(s) with strong winds (> 40 km/h). Ride with caution.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun InsightsCard(insights: List<String>) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Lightbulb,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Ride Insights",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            insights.forEachIndexed { index, insight ->
-                Text(
-                    text = insight,
+                    text = "→ $destinationName",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth(),
                 )
-                if (index < insights.lastIndex) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(thickness = 0.5.dp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+            }
+        }
+        Spacer(Modifier.height(RideCastSpacing.md))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            RideMetric(
+                label = "Distance",
+                value = "${(distanceKm * 10).roundToInt() / 10.0} km",
+                horizontalAlignment = Alignment.CenterHorizontally,
+            )
+            RideMetric(
+                label = "Duration",
+                value = durationFormatted,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MetricsRow(
+    high: Double,
+    low: Double,
+    avg: Double,
+    rainKm: Long,
+    strongWindPoints: Int,
+) {
+    RideCastSurfaceCard {
+        SectionHeader(title = "Conditions along route")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            RideMetric(
+                label = "High",
+                value = "${high.roundToInt()}°",
+                horizontalAlignment = Alignment.CenterHorizontally,
+            )
+            RideMetric(
+                label = "Avg",
+                value = "${avg.roundToInt()}°",
+                emphasized = true,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            )
+            RideMetric(
+                label = "Low",
+                value = "${low.roundToInt()}°",
+                horizontalAlignment = Alignment.CenterHorizontally,
+            )
+        }
+        Spacer(Modifier.height(RideCastSpacing.md))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(Modifier.height(RideCastSpacing.md))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    Icons.Outlined.WaterDrop,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.height(RideCastSpacing.xs))
+                RideMetric(
+                    label = "Rain distance",
+                    value = "$rainKm km",
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    Icons.Outlined.Air,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.height(RideCastSpacing.xs))
+                RideMetric(
+                    label = "Strong wind points",
+                    value = "$strongWindPoints",
+                    emphasized = strongWindPoints > 0,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun StatChip(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+private fun InsightsSection(insights: List<String>) {
+    RideCastSurfaceCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.Lightbulb,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(RideCastSpacing.sm))
+            Text(
+                text = "Ride insights",
+                style = RideCastType.cardTitle,
+            )
+        }
+        Spacer(Modifier.height(RideCastSpacing.md))
+        insights.forEachIndexed { index, insight ->
+            Text(
+                text = insight,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (index < insights.lastIndex) {
+                Spacer(Modifier.height(RideCastSpacing.sm))
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                Spacer(Modifier.height(RideCastSpacing.sm))
+            }
+        }
+    }
+}
+
+private fun deriveRideCondition(insights: List<String>): RideCondition {
+    val combined = insights.joinToString(" ").lowercase()
+    return when {
+        combined.contains("thunderstorm") ||
+            combined.contains("storms") ||
+            combined.contains("heavy rain") -> RideCondition.POOR
+        combined.contains("rain") ||
+            combined.contains("wind") ||
+            combined.contains("visibility") ||
+            combined.contains("peak temperature") -> RideCondition.CAUTION
+        combined.contains("great") || combined.contains("✅") -> RideCondition.GOOD
+        else -> RideCondition.CAUTION
     }
 }
