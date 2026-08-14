@@ -1,0 +1,34 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration — contains API keys, NEVER commit
+local.properties
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+
+# Kotlin
+**/*.class
+
+# Generated
+generated/
+
+# Kotlin/Gradle generated
+.kotlin/
+
+# Cursor
+.cursor/

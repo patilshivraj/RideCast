@@ -1,0 +1,19 @@
+# ─────────────────────────────────────────────────────────────
+#  RideCast — local.properties template
+#
+#  Copy this file to local.properties and fill in your keys.
+#  local.properties is listed in .gitignore — NEVER commit it.
+# ─────────────────────────────────────────────────────────────
+
+# Android SDK location (Android Studio sets this automatically)
+sdk.dir=/Users/YOUR_USER/Library/Android/sdk
+
+# ── Google Maps Platform ──────────────────────────────────────
+# Enable: Maps SDK for Android, Places API, Routes API
+# https://console.cloud.google.com/
+MAPS_API_KEY=your_google_maps_api_key_here
+
+# ── WeatherAPI.com ────────────────────────────────────────────
+# Free tier supports 1 million calls/month
+# https://www.weatherapi.com/
+WEATHER_API_KEY=your_weather_api_key_here
