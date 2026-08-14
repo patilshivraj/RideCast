@@ -106,6 +106,7 @@ import com.ridecast.presentation.weather.WeatherViewModel
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
@@ -390,7 +391,7 @@ private fun TripPlannerContent(
 
     if (showDatePicker) {
         val initialMillis = uiState.departureDate
-            .atStartOfDay(ZoneId.systemDefault())
+            .atStartOfDay(ZoneOffset.UTC)
             .toInstant()
             .toEpochMilli()
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
