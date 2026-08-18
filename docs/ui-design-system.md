@@ -80,6 +80,7 @@ Use `MaterialTheme.shapes` (from `RideCastShapes`) for corners: `medium` for chi
 - **Saved places** — Up to 15 favorites persisted in DataStore (`FavoritePlacesRepository`); bookmark icon on resolved origin/destination
 - **Plan route flow** — Vertical connector with origin/destination dots; **Swap** (`SwapVert`) reverses start and end and auto-recalculates when all stops are resolved; intermediate stops (up to 5) support drag-handle reorder and auto-recalculate after reorder when a route is already calculated; **Add stop** inserts waypoints (Places autocomplete + remove); **Calculate Ride** runs route + weather fetch
 - **Empty / error / loading** — use shared components, not one-off layouts per screen
+- **Timeline metrics** — row 1: Temp, Feels, Rain %; row 2: Wind (km/h) and Precip (mm, hidden when chance and amount are both 0). Precip is emphasized at ≥ 2 mm; alerts mention mm when ≥ 5 mm
 - **Ride condition** (Summary) — derived from insight strings in the UI layer (`Good to ride`, `Ride with caution`, `Consider delaying`)
 
 ## Dark mode

@@ -67,7 +67,7 @@ fun WeatherTimelineCard(
         WeatherCondition.RAIN,
         WeatherCondition.HEAVY_RAIN,
         WeatherCondition.STORM,
-    ) || item.windSpeedKph > 40 || item.rainProbabilityPercent > 50
+    ) || item.windSpeedKph > 40 || item.rainProbabilityPercent > 50 || item.rainAmountMm >= 2.0
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -164,11 +164,25 @@ fun WeatherTimelineCard(
                     value = "${item.rainProbabilityPercent}%",
                     emphasized = item.rainProbabilityPercent > 50,
                 )
+            }
+
+            Spacer(Modifier.height(RideCastSpacing.sm))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 RideMetric(
                     label = "Wind",
-                    value = "${item.windSpeedKph.roundToInt()}",
+                    value = "${item.windSpeedKph.roundToInt()} km/h",
                     emphasized = item.windSpeedKph > 40,
                 )
+                if (shouldShowPrecipMm(item)) {
+                    RideMetric(
+                        label = "Precip",
+                        value = formatPrecipMm(item.rainAmountMm),
+                        emphasized = item.rainAmountMm >= 2.0,
+                    )
+                }
             }
 
             if (!item.isOrigin && !item.isDestination) {
@@ -191,8 +205,20 @@ fun WeatherTimelineCard(
 
 private fun buildAlertText(item: TimelineItem): String = when {
     item.condition == WeatherCondition.STORM -> "Storm expected — consider delaying"
-    item.condition == WeatherCondition.HEAVY_RAIN -> "Heavy rain likely"
+    item.condition == WeatherCondition.HEAVY_RAIN || item.rainAmountMm >= 5.0 ->
+        "Heavy rain likely (${formatPrecipMm(item.rainAmountMm)})"
     item.rainProbabilityPercent > 50 -> "Rain likely (${item.rainProbabilityPercent}%)"
     item.windSpeedKph > 40 -> "Strong wind (${item.windSpeedKph.roundToInt()} km/h)"
     else -> item.conditionText
+}
+
+/** Hide 0.0 mm on dry hours so cards stay quieter. */
+private fun shouldShowPrecipMm(item: TimelineItem): Boolean =
+    item.rainAmountMm > 0.0 || item.rainProbabilityPercent > 0
+
+private fun formatPrecipMm(mm: Double): String {
+    val tenths = (mm * 10).roundToInt()
+    val whole = tenths / 10
+    val fraction = tenths % 10
+    return if (fraction == 0) "$whole mm" else "$whole.$fraction mm"
 }
