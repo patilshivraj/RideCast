@@ -1,0 +1,10 @@
+{
+  "name": "RideCast Android",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "user": "ubuntu",
+  "install": "chmod +x .cursor/scripts/*.sh && .cursor/scripts/cloud-agent-install.sh",
+  "start": ".cursor/scripts/cloud-agent-start.sh"
+}
