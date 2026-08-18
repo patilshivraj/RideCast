@@ -15,14 +15,16 @@ CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-13
 
 if [[ ! -x "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]]; then
   mkdir -p "${ANDROID_HOME}/cmdline-tools"
-  curl -fsSL "${CMDTOOLS_URL}" -o "${CMDTOOLS_ZIP}"
+  if [[ ! -f "${CMDTOOLS_ZIP}" ]]; then
+    curl -fsSL "${CMDTOOLS_URL}" -o "${CMDTOOLS_ZIP}"
+  fi
   unzip -qo "${CMDTOOLS_ZIP}" -d /tmp/android-cmdline-tools
   rm -rf "${ANDROID_HOME}/cmdline-tools/latest"
   mv /tmp/android-cmdline-tools/cmdline-tools "${ANDROID_HOME}/cmdline-tools/latest"
   rm -rf /tmp/android-cmdline-tools "${CMDTOOLS_ZIP}"
 fi
 
-yes | sdkmanager --licenses >/dev/null
+yes | sdkmanager --licenses >/dev/null 2>&1 || true
 
 sdkmanager --install \
   "platform-tools" \
