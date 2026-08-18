@@ -8,6 +8,8 @@ data class ComputeRoutesRequest(
     val intermediates: List<RouteWaypoint> = emptyList(),
     val travelMode: String = "DRIVE",
     val routingPreference: String = "TRAFFIC_AWARE",
+    /** RFC 3339 UTC timestamp — when omitted, the API uses the request time (now). */
+    val departureTime: String? = null,
 )
 
 data class RouteWaypoint(

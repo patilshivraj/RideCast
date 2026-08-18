@@ -31,6 +31,7 @@ class RouteRepositoryImpl @Inject constructor(
                 destination = RouteWaypoint(RouteLocation(RoutesLatLng(input.destinationLat, input.destinationLng))),
                 intermediates = intermediates,
                 travelMode = input.travelMode.apiValue,
+                departureTime = input.departureTime.toInstant().toString(),
             )
             val response = withContext(Dispatchers.IO) {
                 routesApiService.computeRoutes(

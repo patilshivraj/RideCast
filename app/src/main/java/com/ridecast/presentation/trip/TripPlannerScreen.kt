@@ -405,6 +405,13 @@ private fun TripPlannerContent(
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
                             viewModel.onDateSelected(date)
+                            recalculateRouteIfValid(
+                                viewModel = viewModel,
+                                routeViewModel = routeViewModel,
+                                weatherViewModel = weatherViewModel,
+                                routeState = routeState,
+                                requireExistingRoute = true,
+                            )
                         }
                         showDatePicker = false
                     },
@@ -433,6 +440,13 @@ private fun TripPlannerContent(
                     onClick = {
                         viewModel.onTimeSelected(
                             LocalTime.of(timePickerState.hour, timePickerState.minute),
+                        )
+                        recalculateRouteIfValid(
+                            viewModel = viewModel,
+                            routeViewModel = routeViewModel,
+                            weatherViewModel = weatherViewModel,
+                            routeState = routeState,
+                            requireExistingRoute = true,
                         )
                         showTimePicker = false
                     },
