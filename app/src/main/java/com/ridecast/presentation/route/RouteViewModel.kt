@@ -27,6 +27,8 @@ data class RouteUiModel(
     val samplePoints: List<RoutePoint>,
     val originName: String,
     val destinationName: String,
+    val departureTime: java.time.ZonedDateTime,
+    val travelMode: com.ridecast.domain.model.TravelMode,
 )
 
 @HiltViewModel
@@ -70,6 +72,8 @@ class RouteViewModel @Inject constructor(
                             samplePoints = samplePoints,
                             originName = input.originName,
                             destinationName = input.destinationName,
+                            departureTime = input.departureTime,
+                            travelMode = input.travelMode,
                         )
                     )
                 }

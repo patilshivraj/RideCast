@@ -20,8 +20,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material3.Icon
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.painterResource
+import com.ridecast.R
 import com.ridecast.BuildConfig
 import com.ridecast.domain.model.DarkMode
 import com.ridecast.domain.model.MapDisplayType
@@ -126,6 +133,22 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     },
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                val uriHandler = LocalUriHandler.current
+                ListItem(
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://github.com/patilshivraj/RideCast")
+                    },
+                    headlineContent = { Text("Open Source") },
+                    supportingContent = { Text("For the love of safe rides... by Shivraj Patil") },
+                    trailingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_github),
+                            contentDescription = "Open GitHub",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 )
             }
         }

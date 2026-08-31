@@ -1,6 +1,8 @@
 package com.ridecast.presentation.summary
 
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.material.icons.outlined.TwoWheeler
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.ui.draw.drawWithContent
 import kotlinx.coroutines.launch
@@ -90,6 +92,9 @@ fun SummaryScreen(
                 durationFormatted = route.durationFormatted,
                 originName = route.originName,
                 destinationName = route.destinationName,
+                departureTime = route.departureTime,
+                durationSeconds = route.route.durationSeconds,
+                travelMode = route.travelMode,
             )
         }
     }
@@ -210,8 +215,11 @@ private fun SummaryContent(
             TripOverviewCard(
                 originName = originName,
                 destinationName = destinationName,
+                departureTime = stats.departureTime,
+                arrivalTime = stats.arrivalTime,
                 distanceKm = stats.distanceKm,
                 durationFormatted = stats.durationFormatted,
+                travelMode = stats.travelMode,
             )
         }
         item {
@@ -264,21 +272,33 @@ private fun RideConditionBanner(condition: RideCondition) {
 private fun TripOverviewCard(
     originName: String,
     destinationName: String,
+    departureTime: java.time.ZonedDateTime,
+    arrivalTime: java.time.ZonedDateTime,
     distanceKm: Double,
     durationFormatted: String,
+    travelMode: com.ridecast.domain.model.TravelMode,
 ) {
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, h:mm a")
     RideCastSurfaceCard {
         SectionHeader(title = "Trip overview")
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Outlined.DirectionsBike,
+                imageVector = if (travelMode == com.ridecast.domain.model.TravelMode.TWO_WHEELER) {
+                    Icons.Outlined.TwoWheeler
+                } else {
+                    Icons.Outlined.DirectionsCar
+                },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(24.dp),
             )
-            Spacer(Modifier.width(RideCastSpacing.sm))
+            Spacer(Modifier.width(RideCastSpacing.md))
             Column {
-                Text(text = "$originName → $destinationName", style = RideCastType.cardTitle)
+                Text(text = originName, style = RideCastType.cardTitle)
+                Text(text = "Departure: ${departureTime.format(formatter)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(RideCastSpacing.sm))
+                Text(text = destinationName, style = RideCastType.cardTitle)
+                Text(text = "Arrival: ${arrivalTime.format(formatter)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(RideCastSpacing.md))

@@ -28,6 +28,9 @@ class SummaryViewModel @Inject constructor(
         durationFormatted: String,
         originName: String,
         destinationName: String,
+        departureTime: java.time.ZonedDateTime,
+        durationSeconds: Long,
+        travelMode: com.ridecast.domain.model.TravelMode,
     ) {
         viewModelScope.launch {
             _summaryState.value = Result.Loading
@@ -50,6 +53,8 @@ class SummaryViewModel @Inject constructor(
                     RideSummaryStats(
                         originName = originName,
                         destinationName = destinationName,
+                        departureTime = departureTime,
+                        arrivalTime = departureTime.plusSeconds(durationSeconds),
                         distanceKm = distanceKm,
                         durationFormatted = durationFormatted,
                         highestTempCelsius = temps.maxOrNull() ?: 0.0,
@@ -59,6 +64,7 @@ class SummaryViewModel @Inject constructor(
                         rainExposureHours = rainHours,
                         strongWindPoints = points.count { it.weather.windSpeedKph > 40 },
                         insights = insights,
+                        travelMode = travelMode,
                     )
                 )
             } catch (e: Exception) {
