@@ -30,10 +30,14 @@ generated/
 # Kotlin/Gradle generated
 .kotlin/
 
-# Cursor — commit shared rules; ignore local IDE/agent cache and logs
+# Cursor — commit shared rules and Cloud Agent environment; ignore local IDE/agent cache and logs
 .cursor/*
 !.cursor/rules/
 !.cursor/rules/**
+!.cursor/environment.json
+!.cursor/Dockerfile
+!.cursor/scripts/
+!.cursor/scripts/**
 .cursor/debug/
 .cursor/agent-cache/
 .cursor/**/*.log

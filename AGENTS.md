@@ -64,6 +64,19 @@ Package naming follows Clean Architecture: dependencies point inward (`presentat
 
 **API keys:** Never commit `local.properties`. Keys are loaded at build time into `BuildConfig.MAPS_API_KEY` and `BuildConfig.WEATHER_API_KEY` via `app/build.gradle.kts`.
 
+### Cursor Cloud Agents
+
+The committed `.cursor/environment.json` provisions JDK 17, Android SDK 35, and a Google APIs emulator AVD (`ridecast_avd`). Install runs `./gradlew assembleDebug`; start boots the headless emulator with software acceleration (`-accel off`).
+
+```bash
+# After the environment boots (first cold boot can take several minutes)
+.cursor/scripts/wait-for-emulator.sh
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.ridecast.debug/com.ridecast.MainActivity
+```
+
+Set environment secrets `MAPS_API_KEY` and `WEATHER_API_KEY` for live Maps/Weather API calls. Without them, builds succeed but external APIs return errors at runtime.
+
 ## Key conventions
 
 ### Architecture
