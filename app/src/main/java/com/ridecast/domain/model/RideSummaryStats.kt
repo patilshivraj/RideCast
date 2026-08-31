@@ -1,6 +1,8 @@
 package com.ridecast.domain.model
 
 data class RideSummaryStats(
+    val originName: String,
+    val destinationName: String,
     val distanceKm: Double,
     val durationFormatted: String,
     val highestTempCelsius: Double,

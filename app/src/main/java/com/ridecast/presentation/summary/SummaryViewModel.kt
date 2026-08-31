@@ -48,6 +48,8 @@ class SummaryViewModel @Inject constructor(
 
                 _summaryState.value = Result.Success(
                     RideSummaryStats(
+                        originName = originName,
+                        destinationName = destinationName,
                         distanceKm = distanceKm,
                         durationFormatted = durationFormatted,
                         highestTempCelsius = temps.maxOrNull() ?: 0.0,

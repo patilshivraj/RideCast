@@ -6,6 +6,7 @@ data class TimelineItem(
     val index: Int,
     val timeFormatted: String,
     val locationLabel: String,
+    val locationName: String?,
     val distanceKm: Int,
     val condition: WeatherCondition,
     val conditionEmoji: String,

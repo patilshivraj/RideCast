@@ -3,7 +3,14 @@ package com.ridecast.data.network.dto
 import com.google.gson.annotations.SerializedName
 
 data class WeatherForecastResponse(
+    val location: LocationDto?,
     val forecast: ForecastDto?,
+)
+
+data class LocationDto(
+    val name: String?,
+    val region: String?,
+    val country: String?,
 )
 
 data class ForecastDto(

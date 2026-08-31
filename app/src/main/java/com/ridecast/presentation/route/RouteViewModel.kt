@@ -25,6 +25,8 @@ data class RouteUiModel(
     val distanceKm: Double,
     val durationFormatted: String,
     val samplePoints: List<RoutePoint>,
+    val originName: String,
+    val destinationName: String,
 )
 
 @HiltViewModel
@@ -66,6 +68,8 @@ class RouteViewModel @Inject constructor(
                             distanceKm = result.data.distanceMeters / 1000.0,
                             durationFormatted = formatDuration(result.data.durationSeconds),
                             samplePoints = samplePoints,
+                            originName = input.originName,
+                            destinationName = input.destinationName,
                         )
                     )
                 }

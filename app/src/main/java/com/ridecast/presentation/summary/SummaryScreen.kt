@@ -1,5 +1,10 @@
 package com.ridecast.presentation.summary
 
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.ui.draw.drawWithContent
+import kotlinx.coroutines.launch
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,7 +60,6 @@ import com.ridecast.presentation.theme.RideCastType
 import com.ridecast.presentation.theme.RideConditionCaution
 import com.ridecast.presentation.theme.RideConditionGood
 import com.ridecast.presentation.theme.RideConditionPoor
-import com.ridecast.presentation.trip.TripPlannerViewModel
 import com.ridecast.presentation.weather.WeatherViewModel
 import kotlin.math.roundToInt
 
@@ -71,12 +75,10 @@ fun SummaryScreen(
     routeViewModel: RouteViewModel,
     weatherViewModel: WeatherViewModel,
     summaryViewModel: SummaryViewModel = hiltViewModel(),
-    tripPlannerViewModel: TripPlannerViewModel = hiltViewModel(),
 ) {
     val weatherState by weatherViewModel.weatherState.collectAsStateWithLifecycle()
     val routeState by routeViewModel.routeState.collectAsStateWithLifecycle()
     val summaryState by summaryViewModel.summaryState.collectAsStateWithLifecycle()
-    val tripState by tripPlannerViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(weatherState, routeState) {
         if (weatherState is Result.Success && routeState is Result.Success) {
@@ -86,18 +88,70 @@ fun SummaryScreen(
                 rideWeather = rideWeather,
                 distanceKm = route.distanceKm,
                 durationFormatted = route.durationFormatted,
-                originName = tripState.selectedOrigin?.name ?: "Origin",
-                destinationName = tripState.selectedDestination?.name ?: "Destination",
+                originName = route.originName,
+                destinationName = route.destinationName,
             )
         }
     }
 
+    val graphicsLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
     Scaffold(
-        topBar = { RideCastTopBar(title = "Ride Summary") },
+        topBar = { 
+            RideCastTopBar(
+                title = "Ride Summary",
+                actions = {
+                    androidx.compose.material3.IconButton(onClick = {
+                        coroutineScope.launch {
+                            try {
+                                val bitmap = graphicsLayer.toImageBitmap()
+                                val file = java.io.File(context.cacheDir, "ride_summary.png")
+                                java.io.FileOutputStream(file).use { out ->
+                                    bitmap.asAndroidBitmap().compress(
+                                        android.graphics.Bitmap.CompressFormat.PNG,
+                                        100,
+                                        out
+                                    )
+                                }
+                                val uri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file
+                                )
+                                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "image/png"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, "Share Ride Summary"))
+                            } catch (e: Exception) {
+                                timber.log.Timber.e(e, "Failed to share screenshot")
+                            }
+                        }
+                    }) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Outlined.Share,
+                            contentDescription = "Share Summary"
+                        )
+                    }
+                }
+            ) 
+        },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier,
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .drawWithContent {
+                graphicsLayer.record {
+                    this@drawWithContent.drawContent()
+                }
+                drawContent()
+            }
+        ) {
             when {
                 weatherState !is Result.Success -> {
                     EmptyState(
@@ -123,8 +177,8 @@ fun SummaryScreen(
                 }
                 summaryState is Result.Success -> {
                     val stats = (summaryState as Result.Success<RideSummaryStats>).data
-                    val originName = tripState.selectedOrigin?.name ?: "Origin"
-                    val destName = tripState.selectedDestination?.name ?: "Destination"
+                    val originName = stats.originName
+                    val destName = stats.destinationName
                     SummaryContent(
                         stats = stats,
                         originName = originName,
@@ -224,12 +278,7 @@ private fun TripOverviewCard(
             )
             Spacer(Modifier.width(RideCastSpacing.sm))
             Column {
-                Text(text = originName, style = RideCastType.cardTitle)
-                Text(
-                    text = "→ $destinationName",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text(text = "$originName → $destinationName", style = RideCastType.cardTitle)
             }
         }
         Spacer(Modifier.height(RideCastSpacing.md))
