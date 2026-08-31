@@ -2,8 +2,6 @@
 
 A production-quality Android app that shows motorcyclists the weather they will ride through — not just at the start.
 
-> **Contributors & AI agents:** See [AGENTS.md](AGENTS.md) for project conventions, repo layout, and links to detailed docs in `docs/`.
-
 ## Features
 
 - 📍 **Route Planning** — Google Places autocomplete for origin and destination
