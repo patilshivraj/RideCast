@@ -5,6 +5,7 @@ build/
 
 # Local configuration — contains API keys, NEVER commit
 local.properties
+steps
 
 # Android Studio / IntelliJ IDEA
 .idea/
