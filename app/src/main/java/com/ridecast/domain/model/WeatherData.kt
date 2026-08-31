@@ -8,6 +8,7 @@ package com.ridecast.domain.model
  * Tomorrow.io can all be adapted without changing the domain or presentation layers.
  */
 data class WeatherData(
+    val locationName: String? = null,
     val temperatureCelsius: Double,
     val feelsLikeCelsius: Double,
     /** Short human-readable description, e.g. "Partly Cloudy" or "Heavy Rain". */

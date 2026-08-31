@@ -26,6 +26,7 @@ fun RideWeather.toTimelineItems(
             index = index,
             timeFormatted = weatherPoint.routePoint.eta.format(TIME_FORMAT),
             locationLabel = locationLabel,
+            locationName = weatherPoint.weather.locationName,
             distanceKm = distanceKm,
             condition = condition,
             conditionEmoji = condition.toEmoji(),

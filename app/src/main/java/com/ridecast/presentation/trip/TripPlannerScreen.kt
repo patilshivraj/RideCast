@@ -71,6 +71,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
+
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -631,33 +633,10 @@ private fun RouteFlowSection(
                     selectedOrigin.placeId != "current_location",
                 isBookmarked = isOriginFavorite,
                 onToggleBookmark = onToggleOriginFavorite,
+                showCurrentLocationOption = true,
+                onCurrentLocationClick = onUseCurrentLocation,
+                isLoadingCurrentLocation = isLoadingLocation,
             )
-
-            Spacer(Modifier.height(RideCastSpacing.sm))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                TextButton(
-                    onClick = onUseCurrentLocation,
-                    enabled = !isLoadingLocation,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MyLocation,
-                        contentDescription = "Use current location",
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(RideCastSpacing.xs))
-                    Text("Current location", style = RideCastType.label)
-                }
-                if (isLoadingLocation) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                    )
-                }
-            }
 
             Spacer(Modifier.height(RideCastSpacing.sm))
 
@@ -756,6 +735,9 @@ private fun RouteFlowSection(
                 showBookmark = selectedDestination != null,
                 isBookmarked = isDestinationFavorite,
                 onToggleBookmark = onToggleDestinationFavorite,
+                showCurrentLocationOption = true,
+                onCurrentLocationClick = onUseCurrentLocation,
+                isLoadingCurrentLocation = isLoadingLocation,
             )
         }
 
@@ -974,7 +956,12 @@ private fun PlacesSearchField(
     isBookmarked: Boolean,
     onToggleBookmark: () -> Unit,
     modifier: Modifier = Modifier,
+    showCurrentLocationOption: Boolean = false,
+    onCurrentLocationClick: () -> Unit = {},
+    isLoadingCurrentLocation: Boolean = false,
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -986,7 +973,9 @@ private fun PlacesSearchField(
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChanged,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
                 placeholder = { Text(placeholder) },
                 leadingIcon = {
                     Icon(
@@ -1029,7 +1018,9 @@ private fun PlacesSearchField(
             )
         }
 
-        if (predictions.isNotEmpty()) {
+        val showDropdown = predictions.isNotEmpty() || (isFocused && query.isEmpty() && showCurrentLocationOption)
+        
+        if (showDropdown) {
             Spacer(Modifier.height(RideCastSpacing.xs))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1037,6 +1028,36 @@ private fun PlacesSearchField(
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             ) {
                 Column {
+                    if (isFocused && query.isEmpty() && showCurrentLocationOption) {
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    text = "Your location",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            leadingContent = {
+                                if (isLoadingCurrentLocation) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Filled.MyLocation,
+                                        contentDescription = "Use current location",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            modifier = Modifier.clickable(
+                                enabled = !isLoadingCurrentLocation,
+                                onClick = onCurrentLocationClick
+                            )
+                        )
+                    }
+                    
                     predictions.forEach { prediction ->
                         ListItem(
                             headlineContent = {

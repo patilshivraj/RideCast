@@ -47,7 +47,7 @@ class WeatherRepositoryImpl @Inject constructor(
             val hourData = response.forecast?.forecastday?.firstOrNull()?.hour?.firstOrNull()
                 ?: return Result.Error(Exception("No hour data"), "Weather data unavailable for this time.")
 
-            val weatherData = hourData.toDomain()
+            val weatherData = hourData.toDomain(response.location?.name)
             cache[cacheKey] = weatherData
             Result.Success(weatherData)
         } catch (e: Exception) {
@@ -66,7 +66,8 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 }
 
-private fun HourDto.toDomain(): WeatherData = WeatherData(
+private fun HourDto.toDomain(locationName: String?): WeatherData = WeatherData(
+    locationName           = locationName,
     temperatureCelsius     = tempC ?: 0.0,
     feelsLikeCelsius       = feelsLikeC ?: 0.0,
     conditionText          = condition?.text ?: "Unknown",

@@ -92,58 +92,45 @@ fun WeatherTimelineCard(
                     .weight(1f)
                     .padding(RideCastSpacing.md),
             ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = item.timeFormatted,
-                            style = RideCastType.metricSecondary,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        if (!item.isOrigin && !item.isDestination) {
-                            Spacer(Modifier.width(RideCastSpacing.sm))
-                            Text(
-                                text = "${item.distanceKm} km",
-                                style = RideCastType.caption,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                    Text(
-                        text = item.locationLabel,
-                        style = RideCastType.cardTitle,
-                        fontWeight = if (item.isOrigin || item.isDestination) FontWeight.SemiBold else FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                Text(text = item.conditionEmoji, fontSize = 28.sp)
-            }
-
-            if (isNoteworthy) {
-                Spacer(Modifier.height(RideCastSpacing.sm))
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = buildAlertText(item),
-                    style = RideCastType.caption,
-                    color = accentColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            accentColor.copy(alpha = 0.1f),
-                            MaterialTheme.shapes.small,
-                        )
-                        .padding(horizontal = RideCastSpacing.sm, vertical = RideCastSpacing.xs),
+                    text = item.timeFormatted,
+                    style = RideCastType.metricSecondary,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.width(RideCastSpacing.sm))
+                
+                if (!item.isOrigin && !item.isDestination) {
+                    Text(
+                        text = "${item.distanceKm} km",
+                        style = RideCastType.caption,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.width(RideCastSpacing.sm))
+                    Text(
+                        text = "·",
+                        style = RideCastType.caption,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.width(RideCastSpacing.sm))
+                }
+                
+                val displayLocation = if (item.isOrigin || item.isDestination) {
+                    item.locationLabel
+                } else {
+                    item.locationName ?: item.locationLabel
+                }
+                Text(
+                    text = displayLocation,
+                    style = RideCastType.cardTitle,
+                    fontWeight = if (item.isOrigin || item.isDestination) FontWeight.SemiBold else FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
             }
 
-            Spacer(Modifier.height(RideCastSpacing.sm))
-            HorizontalDivider(
-                thickness = 0.5.dp,
-                color = accentColor.copy(alpha = 0.2f),
-            )
             Spacer(Modifier.height(RideCastSpacing.sm))
 
             Row(
@@ -158,31 +145,52 @@ fun WeatherTimelineCard(
                 RideMetric(
                     label = "Feels",
                     value = "${item.feelsLikeCelsius.roundToInt()}°",
+                    emphasized = false,
                 )
-                RideMetric(
-                    label = "Rain",
-                    value = "${item.rainProbabilityPercent}%",
-                    emphasized = item.rainProbabilityPercent > 50,
-                )
-            }
-
-            Spacer(Modifier.height(RideCastSpacing.sm))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
                 RideMetric(
                     label = "Wind",
                     value = "${item.windSpeedKph.roundToInt()} km/h",
                     emphasized = item.windSpeedKph > 40,
                 )
+            }
+
+            Spacer(Modifier.height(RideCastSpacing.sm))
+            
+            // Always show the description line to separate Temp/Wind from Rain info
+            Text(
+                text = buildAlertText(item),
+                style = RideCastType.caption,
+                color = accentColor,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        accentColor.copy(alpha = 0.1f),
+                        MaterialTheme.shapes.small,
+                    )
+                    .padding(horizontal = RideCastSpacing.sm, vertical = RideCastSpacing.xs),
+            )
+
+            Spacer(Modifier.height(RideCastSpacing.sm))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 if (shouldShowPrecipMm(item)) {
+                    RideMetric(
+                        label = "Rain",
+                        value = "${item.rainProbabilityPercent}%",
+                        emphasized = item.rainProbabilityPercent > 50,
+                    )
                     RideMetric(
                         label = "Precip",
                         value = formatPrecipMm(item.rainAmountMm),
                         emphasized = item.rainAmountMm >= 2.0,
                     )
+                } else {
+                    Spacer(Modifier.weight(1f))
                 }
+                Text(text = item.conditionEmoji, fontSize = 28.sp)
             }
 
             if (!item.isOrigin && !item.isDestination) {
